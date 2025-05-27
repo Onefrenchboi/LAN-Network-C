@@ -1,5 +1,5 @@
-#include "equipements/equipements.h"
-#include "equipements/equipements.c"
+#include "equipements/equipement.h"
+#include "equipements/equipement.c"
 #include "graphe/graphe.h"
 #include "graphe/graphe.c"
 #include "graphe/algos.h"
