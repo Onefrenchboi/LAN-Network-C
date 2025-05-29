@@ -11,14 +11,12 @@ typedef enum type{
 } type;
 
 typedef struct equipement{
-    IP addr_IP;
     type type;
-    
+    IP addr_IP;
 } equipement;
 
 typedef struct switch_t{
-    IP addr_IP;
-    type type;
+    equipement base;
     MAC addr_MAC;
     nb_ports nb_ports;
     uint16_t priority;
@@ -26,10 +24,9 @@ typedef struct switch_t{
 } switch_t;
 
 typedef struct station_t{
-    IP addr_IP;
-    type type;
-
+    equipement base;
 } station_t;
 
 
 //! functions ici tsais
+void print_equipement(equipement* e);

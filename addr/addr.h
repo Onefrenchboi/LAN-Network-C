@@ -8,14 +8,17 @@ typedef uint8_t octet;
 typedef uint8_t nb_ports;
 
 
-typedef struct IP{
-    octet address[4]
-
+typedef struct {
+    octet address[4];
 } IP;
 
-typedef struct MAC{
-    octet address[6]
+typedef struct {
+    octet address[6];
 } MAC;
 
 
-//!Rajouter les fonctions dedans.
+//?Fonctions
+
+void print_ip(IP ip);
+void print_mac(MAC mac);
+
