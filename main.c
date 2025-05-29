@@ -3,22 +3,25 @@
 #include "graphe/algos.h"
 #include "reseau/reseau.h"
 #include "trame/trame.h"
+#include <stdio.h>
+
 
 
 int main() {
 
+
+    char* ip = "192.168.24.1";
+    char* mac1 = "01:45:23:a6:f7:01";
+    char* mac2 = "54:d6:a6:82:c5:08";
     station_t* sta = malloc(sizeof(station_t));
     sta->base.type = STATION;
-    IP ip = {{192, 168, 1, 10}};
-    sta->base.addr_IP = ip;
+    sta->addr_IP = read_ip_from_str(ip);
+    sta->base.addr_MAC = read_mac_from_str(mac2);
 
 
     switch_t* sw = malloc(sizeof(switch_t));
     sw->base.type = SWITCH;
-    IP ip2 = {{192, 168, 1, 1}};
-    sw->base.addr_IP = ip2;
-    MAC mac ={{0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE}};
-    sw->addr_MAC = mac;
+    sw->base.addr_MAC = read_mac_from_str(mac1);
     sw->nb_ports = 8;
     sw->priority = 32768;
 
@@ -32,3 +35,5 @@ int main() {
 
     return 0;
 }
+
+
