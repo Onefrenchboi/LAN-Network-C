@@ -75,3 +75,22 @@ void afficher_reseau(reseau* reseau){
         printf("  Lien %zu: %d <-> %d (poids=%d)\n", i, idx1, idx2, l->poids);
     }
 }
+
+void deinit_reseau(reseau *reseau)
+{
+    //free de tout les equipements
+    for (size_t i = 0; i < reseau->nb_equipements; ++i) {
+        free(reseau->equipements[i]);
+    }
+    //free le tableau
+    free(reseau->equipements);
+    reseau->equipements = NULL;
+
+    //free les liens
+    free(reseau->liens);
+    reseau->liens = NULL;
+
+    //deiniti le reste tsais
+    reseau->nb_equipements = 0;
+    reseau->nb_liens = 0;
+}

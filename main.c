@@ -12,6 +12,7 @@ int main() {
     reseau r;
     read_conf("test.txt", &r);
     afficher_reseau(&r);
+    deinit_reseau(&r);
 
     return 0;
 }

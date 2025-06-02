@@ -27,3 +27,4 @@ typedef struct reseau{
 
 void read_conf(char* filename, reseau* reseau);
 void afficher_reseau(reseau* reseau);
+void deinit_reseau(reseau* reseau);
