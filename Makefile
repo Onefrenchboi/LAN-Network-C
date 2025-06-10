@@ -4,12 +4,11 @@ BUILD_DIR ?= ./build
 TARGET_DIR ?= ./bin
 SRC_DIRS ?= .
 
-
-SRCS := $(shell find $(SRC_DIRS) -name "*.c")
+SRCS := $(shell find $(SRC_DIRS) -type f -name "*.c" -not -path "*/.git/*")
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-INC_DIRS := $(shell find $(SRC_DIRS) -type d)
+INC_DIRS := $(shell find $(SRC_DIRS) -type d -not -path "*/.git*")
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 CFLAGS ?= $(INC_FLAGS) -MMD -MP -O3 -Wall -Wextra -Wno-unused-parameter
