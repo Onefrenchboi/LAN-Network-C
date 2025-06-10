@@ -37,7 +37,7 @@ trame_ethernet read_trame_from_str(char* preambule, char* sfd,
                                     char* destination, char* source, 
                                     char* type, char* data, 
                                     char* bourrage, char* fcs) {
-    trame_ethernet trame;
+    trame_ethernet trame = {0};
     sscanf(preambule, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
            &trame.preambule[0], &trame.preambule[1], &trame.preambule[2],
            &trame.preambule[3], &trame.preambule[4], &trame.preambule[5],
@@ -51,7 +51,13 @@ trame_ethernet read_trame_from_str(char* preambule, char* sfd,
            &trame.source[3], &trame.source[4], &trame.source[5]);
     sscanf(type, "%02hhx:%02hhx", &trame.type[0], &trame.type[1]);
     for (size_t i = 0; i < sizeof(trame.data); ++i) {
-        sscanf(data + i * 3, "%02hhx", &trame.data[i]);
+        trame.data[i] = 0x00;
+        if (*(data + i * 3) == '\0') {
+            break;
+        }
+        else {
+            sscanf(data + i * 3, "%02hhx", &trame.data[i]);
+        }
     }
     for (size_t i = 0; i < sizeof(trame.bourrage); ++i) {
         sscanf(bourrage + i * 3, "%02hhx", &trame.bourrage[i]);
