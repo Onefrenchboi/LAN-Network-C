@@ -6,11 +6,15 @@ void read_conf(char* filename, reseau* reseau){
     FILE* f = fopen(filename, "r");
     if (!f) {
         perror("Erreur ouverture fichier, cheh");
-        return NULL;
+        return;
     }
     
     size_t nb_equipements, nb_aretes;
-    fscanf(f, "%zu %zu\n", &nb_equipements, &nb_aretes);
+    if (fscanf(f, "%zu %zu\n", &nb_equipements, &nb_aretes) != 2) {
+        fclose(f);
+        fprintf(stderr, "tu sais pas lire bouuuuh");
+        return;
+    }   
 
     reseau->nb_equipements = nb_equipements;
     reseau->nb_liens = nb_aretes;
@@ -24,17 +28,31 @@ void read_conf(char* filename, reseau* reseau){
         int nb_ports, priority;
 
         //on lit la première valeur pour savoir le type
-        fscanf(f, "%d;", &type);
+        ;
+        if (fscanf(f, "%d;", &type) != 1) {
+            fclose(f);
+            fprintf(stderr, "tu sais toujours pas lire bouuuuh");
+            return;
+        }  
+        
 
         if (type == 1) { //machine
-            fscanf(f, "%17[^;];%12[^;]", mac, ip);
+            if (fscanf(f, "%17[^;];%12[^;\n]", mac, ip) != 2) {
+                fclose(f);
+                fprintf(stderr, "tu sais pas lire les ");
+                return;
+            }
             station_t* st = malloc(sizeof(station_t));
             st->base.type = STATION;
             st->base.addr_MAC=read_mac_from_str(mac);
             st->addr_IP=read_ip_from_str(ip);
             reseau->equipements[i] = (equipement*)st;
         } else if (type == 2) { //switch
-            fscanf(f, "%17[^;];%d;%d", mac, &nb_ports, &priority);
+            if (fscanf(f, "%17[^;];%d;%d", mac, &nb_ports, &priority) != 3) {
+                fclose(f);
+                fprintf(stderr, "tu sais pas lire les switch");
+                return;
+            }
             switch_t* sw = malloc(sizeof(switch_t));
             sw->base.type = SWITCH;
             sw->base.addr_MAC=read_mac_from_str(mac);
@@ -47,7 +65,11 @@ void read_conf(char* filename, reseau* reseau){
     //lecture des arêtes
     for (size_t i = 0; i < nb_aretes; ++i) {
         int idx1, idx2, poids;
-        fscanf(f, "%d;%d;%d\n", &idx1, &idx2, &poids);
+        if (fscanf(f, "%d;%d;%d\n", &idx1, &idx2, &poids) != 3) {
+            fclose(f);
+            fprintf(stderr, "tu sais pas lire les liens");
+            return;
+        }
         reseau->liens[i].s1 = reseau->equipements[idx1];
         reseau->liens[i].s2 = reseau->equipements[idx2];
         reseau->liens[i].poids = poids;
@@ -58,13 +80,13 @@ void read_conf(char* filename, reseau* reseau){
 
 
 void afficher_reseau(reseau* reseau){
-    printf("Equipements (%zu):\n", reseau->nb_equipements);
+    printf(BOLDRED("Equipements (%zu):\n"), reseau->nb_equipements);
     for (size_t i = 0; i < reseau->nb_equipements; ++i) {
         equipement* e = reseau->equipements[i];
         print_equipement(e);
     }
 
-    printf("Liens (%zu):\n", reseau->nb_liens);
+    printf(BOLDRED("Liens (%zu):\n"), reseau->nb_liens);
     for (size_t i = 0; i < reseau->nb_liens; ++i) {
         lien* l = &reseau->liens[i];
         int idx1 = -1, idx2 = -1;
@@ -72,7 +94,9 @@ void afficher_reseau(reseau* reseau){
             if (reseau->equipements[j] == l->s1) idx1 = j;
             if (reseau->equipements[j] == l->s2) idx2 = j;
         }
-        printf("  Lien %zu: %d <-> %d (poids=%d)\n", i, idx1, idx2, l->poids);
+        printf(GREEN("  Lien %zu : "),i);
+        printf(YELLOW("%d <-> %d "),  idx1, idx2);
+        printf("(poids: %d)\n", l->poids);
     }
 }
 

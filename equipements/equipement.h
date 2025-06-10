@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "utils.h"
 #include "addr.h"
+#include "trame.h"
 
 typedef enum type{
     STATION,

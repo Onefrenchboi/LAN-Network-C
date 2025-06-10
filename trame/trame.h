@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "addr.h"
+#include "utils.h"
 
 typedef struct trame_ethernet {
     octet preambule[7];

@@ -25,6 +25,9 @@ int main() {
     sw->nb_ports = 8;
     sw->priority = 32768;
 
+
+
+
     trame_ethernet* t = malloc(sizeof(trame_ethernet));
     for (int i = 0; i < 7; i++) {
         t->preambule[i] = 0b10101010;
@@ -50,16 +53,17 @@ int main() {
         "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00", 
         "00,00");
 
-    print_equipement((equipement*)sta);
-    printf("\n");
-    print_equipement((equipement*)sw);
-    printf("\n");
-    print_trame_ethernet(t);
-    print_trame_ethernet(t2);
+    // print_equipement((equipement*)sta);
+    // printf("\n");
+    // print_equipement((equipement*)sw);
+    // printf("\n");
+    // print_trame_ethernet(t);
+    // print_trame_ethernet(t2);
 
-    free(sta);
-    free(sw);
-    free(t);
+    // free(sta);
+    // free(sw);
+    // free(t);
+
     reseau r;
     read_conf("test.txt", &r);
     afficher_reseau(&r);

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "equipement.h"
+#include "utils.h"
 
 typedef struct lien
 {
