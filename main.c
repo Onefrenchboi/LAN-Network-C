@@ -49,7 +49,9 @@ int main() {
         t->fcs[i] = 0;
     }trame_ethernet* t2 = malloc(sizeof(trame_ethernet));
     *t2 = read_trame_from_str("aa:aa:aa:aa:aa:aa:aa", "01", 
-        "01:45:23:a6:f7:01", "54:d6:a6:82:c5:08", "08:00", "01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f", 
+        "01:45:23:a6:f7:01", "54:d6:a6:82:c5:08", 
+        "08:00", 
+        "01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f", 
         "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00", 
         "00,00");
 
@@ -60,9 +62,9 @@ int main() {
     // print_trame_ethernet(t);
     // print_trame_ethernet(t2);
 
-    // free(sta);
-    // free(sw);
-    // free(t);
+    free(sta);
+    free(sw);
+    free(t);
 
     reseau r;
     read_conf("test.txt", &r);

@@ -4,7 +4,7 @@
 void print_equipement(equipement* e) {
     if (e->type == STATION) {
         station_t* sta = (station_t*)e;
-        printf(GREEN("Station\n"));
+        printf(MAGENTA("Station\n"));
 
         printf(BOLDWHITE("  MAC : "));
         print_mac(sta->base.addr_MAC);
@@ -14,7 +14,7 @@ void print_equipement(equipement* e) {
 
     } else if (e->type == SWITCH) {
         switch_t* sw = (switch_t*)e;
-        printf(GREEN("Switch\n"));
+        printf(MAGENTA("Switch\n"));
 
         printf(BOLDWHITE("  MAC : ")); 
         print_mac(sw->base.addr_MAC);

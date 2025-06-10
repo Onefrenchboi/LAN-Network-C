@@ -22,13 +22,12 @@ void read_conf(char* filename, reseau* reseau){
     reseau->liens = malloc(nb_aretes * sizeof(lien));
 
     //lecture des équipements
-    for (size_t i = 0; i < nb_equipements; ++i) {
+    for (size_t i = 0; i < nb_equipements; i++) {
         int type;
         char mac[100], ip[100]; //!temp, change
         int nb_ports, priority;
 
         //on lit la première valeur pour savoir le type
-        ;
         if (fscanf(f, "%d;", &type) != 1) {
             fclose(f);
             fprintf(stderr, "tu sais toujours pas lire bouuuuh");
@@ -83,7 +82,9 @@ void afficher_reseau(reseau* reseau){
     printf(BOLDRED("Equipements (%zu):\n"), reseau->nb_equipements);
     for (size_t i = 0; i < reseau->nb_equipements; ++i) {
         equipement* e = reseau->equipements[i];
+        printf(BOLDWHITE("%zu. "), i);
         print_equipement(e);
+        printf("-------------------------\n");
     }
 
     printf(BOLDRED("Liens (%zu):\n"), reseau->nb_liens);
@@ -94,7 +95,7 @@ void afficher_reseau(reseau* reseau){
             if (reseau->equipements[j] == l->s1) idx1 = j;
             if (reseau->equipements[j] == l->s2) idx2 = j;
         }
-        printf(GREEN("  Lien %zu : "),i);
+        printf(MAGENTA("  Lien %zu : "),i);
         printf(YELLOW("%d <-> %d "),  idx1, idx2);
         printf("(poids: %d)\n", l->poids);
     }

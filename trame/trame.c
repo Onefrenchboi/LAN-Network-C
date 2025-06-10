@@ -2,35 +2,35 @@
 #include <stdio.h>
 
 void print_octets(const octet *tab, size_t taille) {
-    printf("%02x", tab[0]);
+    printf(YELLOW("%02x"), tab[0]);
     for (size_t i = 1; i < taille; ++i) {
-        printf(":%02x", tab[i]);
+        printf(YELLOW("%02x"), tab[i]);
     }
     printf("\n");
 }
 
 void print_trame_ethernet(const trame_ethernet *t) {
     if (t == NULL) {
-        printf("J'ai dit une trame pas un tram\n");
+        printf("J'ai dit une trame pas un tram");
         return;
     }
-    printf("Trame :\n");
-    printf("Préambule : ");
+    printf(GREEN("Trame :\n"));
+    printf(BOLDWHITE("Préambule : "));
     print_octets(t->preambule, sizeof(t->preambule));
-    printf("SFD : %02x\n", t->sfd);
-    printf("Destination : ");
+    printf(BOLDWHITE("SFD : "));
+    printf(YELLOW("%02x\n"), t->sfd);
+    printf(BOLDWHITE("Destination : "));
     print_octets(t->destination, sizeof(t->destination));
-    printf("Source : ");
+    printf(BOLDWHITE("Source : "));
     print_octets(t->source, sizeof(t->source));
-    printf("Type : ");
+    printf(BOLDWHITE("Type : "));
     print_octets(t->type, sizeof(t->type));
-    printf("Données : ");
+    printf(BOLDWHITE("Données : "));
     print_octets(t->data, sizeof(t->data));
-    printf("Bourrage : ");
+    printf(BOLDWHITE("Bourrage : "));
     print_octets(t->bourrage, sizeof(t->bourrage));
-    printf("FCS : ");
+    printf(BOLDWHITE("FCS : "));
     print_octets(t->fcs, sizeof(t->fcs));
-    printf("\n");
 }
 
 trame_ethernet read_trame_from_str(char* preambule, char* sfd, 
