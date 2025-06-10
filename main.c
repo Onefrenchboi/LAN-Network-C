@@ -25,13 +25,41 @@ int main() {
     sw->nb_ports = 8;
     sw->priority = 32768;
 
+    trame_ethernet* t = malloc(sizeof(trame_ethernet));
+    for (int i = 0; i < 7; i++) {
+        t->preambule[i] = 0b10101010;
+    }
+    t->sfd = 1;
+    for (int i = 0; i < 6; i++) {
+        t->destination[i] = sta->base.addr_MAC.address[i];
+        t->source[i] = sw->base.addr_MAC.address[i];
+    }
+    t->type[0] = 0x08;
+    t->type[1] = 0x00;
+    for (int i = 0; i < 1500; i++) {
+        t->data[i] = i;
+    }
+    for (int i = 0; i < 46; i++) {
+        t->bourrage[i] = 0;
+    }
+    for (int i = 0; i < 4; i++) {
+        t->fcs[i] = 0;
+    }trame_ethernet* t2 = malloc(sizeof(trame_ethernet));
+    *t2 = read_trame_from_str("aa:aa:aa:aa:aa:aa:aa", "01", 
+        "01:45:23:a6:f7:01", "54:d6:a6:82:c5:08", "08:00", "01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f", 
+        "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00", 
+        "00,00");
 
     print_equipement((equipement*)sta);
     printf("\n");
     print_equipement((equipement*)sw);
+    printf("\n");
+    print_trame_ethernet(t);
+    print_trame_ethernet(t2);
 
     free(sta);
     free(sw);
+    free(t);
 
     return 0;
 }

@@ -2,13 +2,14 @@
 #include <stdio.h>
 
 void print_octets(const octet *tab, size_t taille) {
-    for (size_t i = 0; i < taille; ++i) {
-        printf("%02x:", tab[i]);
+    printf("%02x", tab[0]);
+    for (size_t i = 1; i < taille; ++i) {
+        printf(":%02x", tab[i]);
     }
     printf("\n");
 }
 
-void print_trame(const trame_ethernet *t) {
+void print_trame_ethernet(const trame_ethernet *t) {
     if (t == NULL) {
         printf("J'ai dit une trame pas un tram\n");
         return;

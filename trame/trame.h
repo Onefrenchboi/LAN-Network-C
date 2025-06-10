@@ -16,3 +16,7 @@ typedef struct trame_ethernet {
 } trame_ethernet;
 
 void print_trame_ethernet(const trame_ethernet *trame);
+trame_ethernet read_trame_from_str(char* preambule, char* sfd, 
+                                    char* destination, char* source, 
+                                    char* type, char* data, 
+                                    char* bourrage, char* fcs);
