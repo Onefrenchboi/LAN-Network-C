@@ -1,2 +1,6 @@
 ### vscode  ###
 .vscode/
+
+### fichier build et bin ###
+bin/
+build/
