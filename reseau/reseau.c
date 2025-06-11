@@ -141,6 +141,9 @@ void deinit_reseau(reseau *reseau)
     reseau->equipements = NULL;
 
     //free les liens
+    for (size_t i = 0; i < reseau->nb_liens; ++i) {
+        free(reseau->liens[i]);
+    }
     free(reseau->liens);
     reseau->liens = NULL;
 

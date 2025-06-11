@@ -63,7 +63,6 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
     }
     
     //Si c'est une station, on envoie direct vu qu'elle est connectée qu'a un seul truc (un switch)
-    uint8_t port_numero = 0; 
     if (e->type == STATION) {
         port* p = &e->ports[0];
         port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA;
