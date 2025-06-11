@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #define RED(string) "\033[0;31m"string"\033[0m" 
 #define BOLDRED(string) "\033[1;31m"string"\033[0m" 
 #define GREEN(string) "\033[0;32m"string"\033[0m"

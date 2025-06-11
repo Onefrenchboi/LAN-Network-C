@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 typedef uint8_t octet;
-typedef uint8_t nb_ports;
 
 
 typedef struct {

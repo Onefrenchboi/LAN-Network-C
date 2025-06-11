@@ -42,9 +42,7 @@ void read_conf(char* filename, reseau* reseau){
                 return;
             }
             station_t* st = malloc(sizeof(station_t));
-            st->base.type = STATION;
-            st->base.addr_MAC=read_mac_from_str(mac);
-            st->addr_IP=read_ip_from_str(ip);
+            init_station(st, mac, ip);
             reseau->equipements[i] = (equipement*)st;
         } else if (type == 2) { //switch
             if (fscanf(f, "%17[^;];%d;%d", mac, &nb_ports, &priority) != 3) {
@@ -53,10 +51,7 @@ void read_conf(char* filename, reseau* reseau){
                 return;
             }
             switch_t* sw = malloc(sizeof(switch_t));
-            sw->base.type = SWITCH;
-            sw->base.addr_MAC=read_mac_from_str(mac);
-            sw->nb_ports = nb_ports;
-            sw->priority = priority;
+            init_switch(sw, mac, nb_ports, priority);
             reseau->equipements[i] = (equipement*)sw;
         }
     }
@@ -69,14 +64,44 @@ void read_conf(char* filename, reseau* reseau){
             fprintf(stderr, "tu sais pas lire les liens");
             return;
         }
-        reseau->liens[i].s1 = reseau->equipements[idx1];
-        reseau->liens[i].s2 = reseau->equipements[idx2];
-        reseau->liens[i].poids = poids;
+
+
+        lien* l = malloc(sizeof(lien));
+        equipement* e1 = reseau->equipements[idx1];
+        equipement* e2 = reseau->equipements[idx2];
+        size_t port1 = (size_t)-1; 
+        size_t port2 = (size_t)-1;
+        
+        for (size_t y = 0; y < e1->nb_ports; y++) {
+            if (e1->ports[y].lien == NULL) {
+                port1 = y;
+                break;
+            }
+        }
+        for (size_t y = 0; y < e2->nb_ports; y++) {
+            if (e2->ports[y].lien == NULL) {
+                port2 = y;
+                break;
+            }
+        }
+        if (port1 == (size_t)-1 || port2 == (size_t)-1) {
+            fprintf(stderr, "pu de port dispo");
+            free(l);
+            fclose(f);
+            return;
+        }
+        
+
+        l->portA = &e1->ports[port1];
+        l->portB = &e2->ports[port2];
+        l->poids = poids;
+        reseau->liens[i] = l;
+        
+        l->portA->lien = l;
+        l->portB->lien = l;
     }
     fclose(f);
 }
-
-
 
 void afficher_reseau(reseau* reseau){
     printf(BOLDRED("Equipements (%zu):\n"), reseau->nb_equipements);
@@ -84,16 +109,20 @@ void afficher_reseau(reseau* reseau){
         equipement* e = reseau->equipements[i];
         printf(BOLDWHITE("%zu. "), i);
         print_equipement(e);
-        printf("-------------------------\n");
+        printf("\n-------------------------\n");
     }
 
     printf(BOLDRED("Liens (%zu):\n"), reseau->nb_liens);
     for (size_t i = 0; i < reseau->nb_liens; ++i) {
-        lien* l = &reseau->liens[i];
+        lien* l = reseau->liens[i];
         int idx1 = -1, idx2 = -1;
         for (size_t j = 0; j < reseau->nb_equipements; ++j) {
-            if (reseau->equipements[j] == l->s1) idx1 = j;
-            if (reseau->equipements[j] == l->s2) idx2 = j;
+            if (reseau->equipements[j] == l->portA->parent) {
+                idx1 = j;
+            }
+            if (reseau->equipements[j] == l->portB->parent) {
+                idx2 = j;
+            }
         }
         printf(MAGENTA("  Lien %zu : "),i);
         printf(YELLOW("%d <-> %d "),  idx1, idx2);

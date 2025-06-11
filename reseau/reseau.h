@@ -8,18 +8,11 @@
 #include "equipement.h"
 #include "utils.h"
 
-typedef struct lien
-{
-  equipement* s1;
-  equipement* s2;
-  uint8_t poids;
-} lien;
-
 
 typedef struct reseau{
     size_t nb_equipements;
     equipement** equipements; //ptr de ptr parce qu'on va prendre un ptr sur chacune des trucs pour toucher dessus
-    lien* liens;
+    lien** liens; //pareil pour les liens
     size_t nb_liens;
 } reseau;
 
