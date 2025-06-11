@@ -56,6 +56,11 @@ void envoyer_broadcast(equipement* e, trame_ethernet* trame, uint8_t port_exclu)
 
 
 void envoyer_trame(equipement* e, trame_ethernet* trame) {
+    printf(BOLDGREEN("\nEnvoi d'une trame de "));
+    print_mac(e->addr_MAC);
+    printf(BOLDGREEN(" à "));
+    print_mac(trame->destination);
+    printf(BOLDGREEN("\n------------------------------------------------------------------------\n"));
     MAC target = trame->destination;
     if (memcmp(&target, &trame->source, sizeof(MAC)) == 0) {
         printf("Ca va la schizophrénie ? tu tparles a toi-même\n");
@@ -71,7 +76,8 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
         print_mac(e->addr_MAC);
         printf(CYAN(" à "));
         print_mac(voisin->addr_MAC);
-        printf(CYAN(" via le port %d\n"), p->numero);
+        printf(CYAN(" via le port "));
+        printf(GREEN("%d\n"), p->numero);
         printf("--------------------------------------\n");
         recevoir_trame(voisin, trame, voisin_port->numero);
         return;
@@ -79,7 +85,6 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
     
     switch_t* s = (switch_t*)e;
     uint8_t port_dest = existe_dans_commutation_table(&s->commutation_table, trame->destination);
-
     if (port_dest != (uint8_t)-1) { //techniquement le cast en int va faire que -1 c'est 255 mais chuuuuut on a def le nb max de port a 16
         port* p = &e->ports[port_dest];
         port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA; //mueeheheh ternaire
@@ -89,7 +94,8 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
         print_mac(e->addr_MAC);
         printf(CYAN(" à "));
         print_mac(voisin->addr_MAC);
-        printf(CYAN(" via le port %d\n"), p->numero);
+        printf(CYAN(" via le port "));
+        printf(GREEN("%d\n"), p->numero);
         printf("--------------------------------------\n");
 
         
@@ -110,15 +116,15 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
 
 void recevoir_trame(equipement* e, trame_ethernet* trame, uint8_t port_numero){
     if (e->type==STATION) {
-        printf(MAGENTA("\nTrame reçue sur la station "));
+        printf(MAGENTA("Trame reçue sur la station "));
         print_ip(((station_t*)e)->addr_IP);
 
 
         printf(MAGENTA(" (MAC : "));
         print_mac(e->addr_MAC);
-        printf(MAGENTA(")\n"));
+        printf(MAGENTA(" )\n"));
 
-        printf(MAGENTA("\nTrame reçue sur le port %d\n"), port_numero);
+        printf(MAGENTA("Trame reçue sur le port %d\n"), port_numero);
         printf(MAGENTA("Trame envoyée par : "));
         print_mac(trame->source);
         printf("\n--------------------------------------\n");
@@ -151,6 +157,7 @@ void recevoir_trame(equipement* e, trame_ethernet* trame, uint8_t port_numero){
         }
     } else {
         printf(MAGENTA("Switch flooding sur autres ports (hors port arrivée)\n"));
+        printf("--------------------------------------\n");
         envoyer_broadcast(e, trame, port_numero);
     }
     

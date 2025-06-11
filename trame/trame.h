@@ -19,6 +19,15 @@ typedef struct trame_ethernet {
     octet fcs[4];
 } trame_ethernet;
 
+
+
+
+
+typedef struct BDPU {
+
+} BDPU;
+
+
 void print_trame_ethernet(const trame_ethernet *trame);
 trame_ethernet read_trame_from_str(char* preambule, char* sfd, 
                                     char* destination, char* source, 

@@ -35,7 +35,13 @@ typedef struct {
 typedef struct port {
     equipement* parent;
     uint8_t numero;  
+    //Etat qui peut prendre 3 valeurs pour STP (Spanning Tree Protocol) : 
+    // 0 = Port bloqué (non utilisé)
+    // 1 = Port d'écoute (écoute les trames mais ne les transmet pas)
+    // 2 = Port de transfert (transmet les trames)
+    //uint8_t etat;
     struct lien* lien; 
+
 } port;
 
 typedef struct lien {
