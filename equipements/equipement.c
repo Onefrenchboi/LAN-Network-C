@@ -32,8 +32,11 @@ void init_commutation_table(table_commutation* table){
 
 
 
-void envoyer_broadcast(equipement* e, trame_ethernet* trame) {
-    for (size_t i = 0; i < e->nb_ports; ++i) {
+void envoyer_broadcast(equipement* e, trame_ethernet* trame, uint8_t port_exclu) {
+    for (uint8_t i = 0; i < e->nb_ports; ++i) {
+        if (i == port_exclu) {
+            continue;
+        }
         port* p = &e->ports[i];
         if (p->lien != NULL) {
             port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA;
@@ -51,6 +54,7 @@ void envoyer_broadcast(equipement* e, trame_ethernet* trame) {
 
 
 
+
 void envoyer_trame(equipement* e, trame_ethernet* trame) {
     MAC target = trame->destination;
     if (memcmp(&target, &trame->source, sizeof(MAC)) == 0) {
@@ -60,16 +64,29 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
     
     //Si c'est une station, on envoie direct vu qu'elle est connectée qu'a un seul truc (un switch)
     uint8_t port_numero = 0; 
-    if (e->type == SWITCH) {
-        port_numero = existe_dans_commutation_table(&((switch_t*)e)->commutation_table, target);
+    if (e->type == STATION) {
+        port* p = &e->ports[0];
+        port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA;
+        equipement* voisin = voisin_port->parent;
+        printf(CYAN("Envoi d'une trame de "));
+        print_mac(e->addr_MAC);
+        printf(CYAN(" à "));
+        print_mac(voisin->addr_MAC);
+        printf(CYAN(" via le port %d\n"), p->numero);
+        printf("--------------------------------------\n");
+        recevoir_trame(voisin, trame, voisin_port->numero);
+        return;
     }
-    if (port_numero != (uint8_t)-1) { //techniquement 255 mais chuuuuut on a def le nb max de port a 16
-        port* p = &e->ports[port_numero];
-        port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA; //mueeheheh ternaire
+    
+    switch_t* s = (switch_t*)e;
+    uint8_t port_dest = existe_dans_commutation_table(&s->commutation_table, trame->destination);
 
+    if (port_dest != (uint8_t)-1) { //techniquement le cast en int va faire que -1 c'est 255 mais chuuuuut on a def le nb max de port a 16
+        port* p = &e->ports[port_dest];
+        port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA; //mueeheheh ternaire
         equipement* voisin = voisin_port->parent;
         printf("--------------------------------------\n");
-        printf(CYAN("Envoi d'une trame de "));
+        printf(CYAN("Switch envoie unicast : "));
         print_mac(e->addr_MAC);
         printf(CYAN(" à "));
         print_mac(voisin->addr_MAC);
@@ -84,58 +101,60 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
         printf(" n'est pas dans la table de commutation, envoi en broadcast.\n");
         printf("--------------------------------------\n");
 
-        envoyer_broadcast(e, trame);
+        envoyer_broadcast(e, trame,-1);
     }
 }
+
+
+
+
 
 void recevoir_trame(equipement* e, trame_ethernet* trame, uint8_t port_numero){
     if (e->type==STATION) {
         printf(MAGENTA("\nTrame reçue sur la station "));
         print_ip(((station_t*)e)->addr_IP);
+
+
+        printf(MAGENTA(" (MAC : "));
+        print_mac(e->addr_MAC);
+        printf(MAGENTA(")\n"));
+
         printf(MAGENTA("\nTrame reçue sur le port %d\n"), port_numero);
         printf(MAGENTA("Trame envoyée par : "));
         print_mac(trame->source);
         printf("\n--------------------------------------\n");
         return;
     }
-    else if (e->type==SWITCH) {
-        printf(MAGENTA("\nTrame reçue sur le switch "));
-        print_mac(((switch_t*)e)->base.addr_MAC);
-        printf(MAGENTA("\nTrame reçue sur le port %d\n"), port_numero);
-        printf(MAGENTA("Trame envoyée par : "));
-        print_mac(trame->source);
-        update_commutation_table(&((switch_t*)e)->commutation_table, trame, port_numero);
-        printf("\n--------------------------------------\n");
 
+    switch_t* s = (switch_t*)e;
 
-        MAC target = trame->destination;
-        printf("Destination de la trame : ");
-        print_mac(target);
-        printf("\n");
-        uint8_t out_port_num = existe_dans_commutation_table(&((switch_t*)e)->commutation_table, target);
-        if (out_port_num != (uint8_t)-1 && out_port_num != port_numero) {
-            port* p = &e->ports[out_port_num];
-            if (p->lien) {
-                port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA;
-                equipement* voisin = voisin_port->parent;
-                recevoir_trame(voisin, trame, p->numero);
-             }
-        } else {
-            for (size_t i = 0; i < e->nb_ports; ++i) {
-                if (i == port_numero) {
-                    continue;
-                }
-                port* p = &e->ports[i];
-                if (p->lien) {
-                    port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA;
-                    equipement* voisin = voisin_port->parent;printf("Broadcast sur port %zu vers equipement %p\n", i, (void*)voisin);
-        
-                    recevoir_trame(voisin, trame, p->numero);
-                }
-            }
+    update_commutation_table(&s->commutation_table, trame, port_numero);
+
+    printf(MAGENTA("Trame reçue sur le switch : "));
+    print_mac(((switch_t*)e)->base.addr_MAC);
+    printf(MAGENTA("\nTrame reçue sur le port %d\n"), port_numero);
+    printf(MAGENTA("Trame envoyée par : "));
+    print_mac(trame->source);
+    printf("\n--------------------------------------\n");
+
+    uint8_t port_dest = existe_dans_commutation_table(&s->commutation_table, trame->destination);
+    if (port_dest != (uint8_t)-1 && port_dest != port_numero) {
+        port* p = &e->ports[port_dest];
+        if (p->lien) {
+            port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA;
+            equipement* voisin = voisin_port->parent;
+            printf(MAGENTA("Switch relaye unicast: "));
+            print_mac(e->addr_MAC);
+            printf(MAGENTA(" à "));
+            print_mac(voisin->addr_MAC);
+            printf(MAGENTA(" via port %d\n"), p->numero);
+            recevoir_trame(voisin, trame, voisin_port->numero);
         }
-        return;
+    } else {
+        printf(MAGENTA("Switch flooding sur autres ports (hors port arrivée)\n"));
+        envoyer_broadcast(e, trame, port_numero);
     }
+    
 }
 
 //return le num du port si la MAC existe dans la table de commutation, -1 sinon
@@ -155,7 +174,6 @@ void update_commutation_table(table_commutation* table, trame_ethernet* trame, u
             return;
         }
     }
-
     table->entry[table->size].addr_MAC = trame->source;
     table->entry[table->size].port = port_numero;
     table->size++;
