@@ -23,7 +23,7 @@ typedef struct trame_ethernet {
 
 
 
-typedef struct BDPU {
+typedef struct BDPU {g
 
 } BDPU;
 
