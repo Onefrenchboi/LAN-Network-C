@@ -1,6 +1,8 @@
 #include "equipement.h"
 #include <stdio.h>
 
+
+//Initialisations 
 void init_switch(switch_t* sw, char* addr_MAC, uint8_t nb_ports, uint16_t priority) {
     sw->base.type = SWITCH;
     sw->base.addr_MAC = read_mac_from_str(addr_MAC);
@@ -32,6 +34,8 @@ void init_commutation_table(table_commutation* table){
 
 
 
+
+//Envoi de trames
 void envoyer_broadcast(equipement* e, trame_ethernet* trame, uint8_t port_exclu) {
     for (uint8_t i = 0; i < e->nb_ports; ++i) {
         if (i == port_exclu) {
@@ -52,16 +56,14 @@ void envoyer_broadcast(equipement* e, trame_ethernet* trame, uint8_t port_exclu)
     }
 }
 
-
-
-
 void envoyer_trame(equipement* e, trame_ethernet* trame) {
+    MAC target = trame->destination;
     printf(BOLDGREEN("\nEnvoi d'une trame de "));
     print_mac(e->addr_MAC);
     printf(BOLDGREEN(" à "));
-    print_mac(trame->destination);
+    print_mac(target);
     printf(BOLDGREEN("\n------------------------------------------------------------------------\n"));
-    MAC target = trame->destination;
+
     if (memcmp(&target, &trame->source, sizeof(MAC)) == 0) {
         printf("Ca va la schizophrénie ? tu tparles a toi-même\n");
         return;
@@ -87,6 +89,10 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
     uint8_t port_dest = existe_dans_commutation_table(&s->commutation_table, trame->destination);
     if (port_dest != (uint8_t)-1) { //techniquement le cast en int va faire que -1 c'est 255 mais chuuuuut on a def le nb max de port a 16
         port* p = &e->ports[port_dest];
+        if (p->status==2) {
+            printf(RED("\nLe port %d est bloqué, on ne peut pas envoyer la trame.\n"), p->numero);
+            return;
+        }
         port* voisin_port = (p->lien->portA == p) ? p->lien->portB : p->lien->portA; //mueeheheh ternaire
         equipement* voisin = voisin_port->parent;
         printf("--------------------------------------\n");
@@ -110,11 +116,9 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
     }
 }
 
-
-
-
-
+//Reception de trames
 void recevoir_trame(equipement* e, trame_ethernet* trame, uint8_t port_numero){
+
     if (e->type==STATION) {
         printf(MAGENTA("Trame reçue sur la station "));
         print_ip(((station_t*)e)->addr_IP);
@@ -173,6 +177,7 @@ uint8_t existe_dans_commutation_table(table_commutation* table, MAC target){
     return (uint8_t)-1;
 }
 
+//update la table de commutation avec la trame reçue et le port sur lequel elle a été reçue
 void update_commutation_table(table_commutation* table, trame_ethernet* trame, uint8_t port_numero) {
     for (int i = 0; i < table->size; ++i) {
         if (memcmp(&table->entry[i].addr_MAC, &trame->source, sizeof(MAC)) == 0) {

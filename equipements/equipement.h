@@ -35,7 +35,7 @@ typedef struct {
 typedef struct port {
     equipement* parent;
     uint8_t numero;  
-    uint8_t status; //jsp encore mais genre 3 etats
+    uint8_t status; //0=root port, 1=designated port, 2=bloqué
     struct lien* lien; 
 
 } port;
