@@ -14,29 +14,29 @@ trame_ethernet read_trame_from_str(char* preambule, char* sfd,
                                     char* destination, char* source, 
                                     char* type, char* data, 
                                     char* bourrage, char* fcs) {
-    trame_ethernet trame = {0};
-    sscanf(preambule, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
-           &trame.preambule[0], &trame.preambule[1], &trame.preambule[2],
-           &trame.preambule[3], &trame.preambule[4], &trame.preambule[5],
-           &trame.preambule[6]);
-    sscanf(sfd, "%02hhx", &trame.sfd);
-    trame.destination = read_mac_from_str(destination);
-    trame.destination = read_mac_from_str(source);
-    sscanf(type, "%02hhx:%02hhx", &trame.type[0], &trame.type[1]);
-    for (size_t i = 0; i < sizeof(trame.data); ++i) {
-        trame.data[i] = 0x00;
-        if (*(data + i * 3) == '\0') {
-            break;
-        }
-        else {
-            sscanf(data + i * 3, "%02hhx", &trame.data[i]);
-        }
-    }
-    for (size_t i = 0; i < sizeof(trame.bourrage); ++i) {
-        sscanf(bourrage + i * 3, "%02hhx", &trame.bourrage[i]);
-    }
-    sscanf(fcs, "%02hhx:%02hhx:%02hhx:%02hhx", &trame.fcs[0], &trame.fcs[1], &trame.fcs[2], &trame.fcs[3]);
-    return trame;
+    // trame_ethernet trame = {0};
+    // sscanf(preambule, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
+    //        &trame.preambule[0], &trame.preambule[1], &trame.preambule[2],
+    //        &trame.preambule[3], &trame.preambule[4], &trame.preambule[5],
+    //        &trame.preambule[6]);
+    // sscanf(sfd, "%02hhx", &trame.sfd);
+    // trame.destination = read_mac_from_str(destination);
+    // trame.destination = read_mac_from_str(source);
+    // sscanf(type, "%02hhx:%02hhx", &trame.type[0], &trame.type[1]);
+    // for (size_t i = 0; i < sizeof(trame.data); ++i) {
+    //     trame.data[i] = 0x00;
+    //     if (*(data + i * 3) == '\0') {
+    //         break;
+    //     }
+    //     else {
+    //         sscanf(data + i * 3, "%02hhx", &trame.data[i]);
+    //     }
+    // }
+    // for (size_t i = 0; i < sizeof(trame.bourrage); ++i) {
+    //     sscanf(bourrage + i * 3, "%02hhx", &trame.bourrage[i]);
+    // }
+    // sscanf(fcs, "%02hhx:%02hhx:%02hhx:%02hhx", &trame.fcs[0], &trame.fcs[1], &trame.fcs[2], &trame.fcs[3]);
+    // return trame;
 }
 
 
@@ -57,7 +57,13 @@ void print_trame_ethernet(const trame_ethernet *t) {
     printf(BOLDWHITE("Source : "));
     print_mac(t->source);
     printf(BOLDWHITE("Type : "));
-    print_octets(t->type, sizeof(t->type));
+    if (t->type == ETHERNET_T) {
+        printf(YELLOW("Ethernet\n"));
+    } else if (t->type == BDPU_T) {
+        printf(YELLOW("BPDU\n"));
+    } else {
+        printf(YELLOW("Type inconnu\n"));
+    }
     printf(BOLDWHITE("Données : "));
     print_octets(t->data, sizeof(t->data));
     printf(BOLDWHITE("Bourrage : "));
@@ -76,15 +82,12 @@ trame_ethernet creer_trame_vide(equipement* e, MAC target) {
     trame.sfd = 0xAB;
 
     //adresse destination : 6 octets 
-    trame.destination = target; 
+    memcpy(&trame.destination, &target, sizeof(MAC)); //On copie l'adresse MAC de destination dans la trame
 
     //adresse source : 6 octets
-    trame.source = e->addr_MAC; //On met l'adresse MAC de l'équipement qui envoie la trame comme destination
-
-    //type : 2 octets - indique quel protocole est concerné par le message.
-    //Ex : 0x0800 (IPv4), 0x0806 (ARP), 0x86DD (IPv6)…
-    trame.type[0] = 0x08;
-    trame.type[1] = 0x00;
+    memcpy(&trame.source, &e->addr_MAC, sizeof(MAC)); //On copie l'adresse MAC de l'équipement dans la trame
+    //type : ethernet ou BPDU
+    trame.type = ETHERNET_T; //On initialise le type de la trame à Ethernet, on peut changer plus tard si besoin
 
     //DATA (données) : 46 à 1500 octets (y compris bourrage/padding éventuel)
     memset(trame.data, 0, 1500); //Ici on va mettre tout a 0 
@@ -96,3 +99,53 @@ trame_ethernet creer_trame_vide(equipement* e, MAC target) {
     return trame;
 }
     
+
+
+trame_ethernet creer_trame_BPDU(equipement* e){
+    
+    trame_ethernet trame = creer_trame_vide(e, read_mac_from_str("01:80:c2:00:00:00")); //Adresse MAC de destination pour les BPDU
+
+    //On met le type de la trame à BPDU
+    trame.type = BDPU_T;
+
+    //On remplit les données avec les données de la BPDU
+    BPDU b;
+    b.root = e->addr_MAC;
+    b.cost = 0;
+    b.bridge_id = e->addr_MAC;
+
+    memcpy(trame.data, &b, sizeof(BPDU));
+    return trame;
+}
+
+bool is_BPDU(trame_ethernet* trame) {
+    //On vérifie si le type de la trame est bpdu
+    if (trame->type==BDPU_T) {
+        return true;
+    }
+    return false;
+}
+
+BPDU read_BPDU_from_trame(trame_ethernet* trame) {
+    BPDU b;
+    if (is_BPDU(trame)) {
+        memcpy(&b, trame->data, sizeof(BPDU));
+    } else {
+        memset(&b, 0, sizeof(BPDU));
+    }
+    return b;
+}
+
+bool compare_BPDU(BPDU* b1, BPDU* b2) {
+    if (memcmp(&b1->root, &b2->root, sizeof(MAC)) < 0) {
+        return true; //b1 est meilleur
+    }
+    if (memcmp(&b1->root, &b2->root, sizeof(MAC)) < 0) {
+        return true; //b1 est meilleur
+    }
+    if (b1->cost < b2->cost) {
+        return true; //b1 est meilleur
+    }
+
+    return false; //b2 est meilleur ou égal
+}

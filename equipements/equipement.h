@@ -13,12 +13,12 @@
 
 typedef struct equipement equipement; //déclarations anticipé de jsp quoi
 typedef struct trame_ethernet trame_ethernet;
+typedef struct BPDU BPDU;
 
 typedef enum type{
     STATION,
     SWITCH
 } type;
-
 
 typedef struct {
     MAC addr_MAC;
@@ -35,9 +35,9 @@ typedef struct {
 typedef struct port {
     equipement* parent;
     uint8_t numero;  
-    uint8_t status; //0=root port, 1=designated port, 2=bloqué
+    char status; //R=root port, D=designated port, B=blocked 
+    char role; //F=forwarding, L=learning, B=blocking, D=disabled
     struct lien* lien; 
-
 } port;
 
 typedef struct lien {
@@ -59,6 +59,7 @@ typedef struct switch_t{
     equipement base;
     uint16_t priority;
     table_commutation commutation_table;
+    BPDU* bpdu; 
 } switch_t;
 
 typedef struct station_t{
@@ -81,3 +82,4 @@ void recevoir_trame(equipement* e, trame_ethernet* trame, uint8_t port_numero); 
 uint8_t existe_dans_commutation_table(table_commutation* table, MAC target); //check si la MAC target existe dans la table de commutation table, retourne le numéro du port si oui, -1 sinon
 void update_commutation_table(table_commutation* table, trame_ethernet* trame, uint8_t port_numero); //update la table de commu avec la trame 
 
+void send_BPDU(switch_t* sw);
