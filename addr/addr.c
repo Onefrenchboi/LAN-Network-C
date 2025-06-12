@@ -30,3 +30,14 @@ MAC read_mac_from_str(const char* str) {
            &mac.address[3], &mac.address[4], &mac.address[5]);
     return mac;
 }
+
+MAC compare_mac(MAC mac1, MAC mac2) {
+    for (int i = 0; i < 6; ++i) {
+        if (mac1.address[i] < mac2.address[i]) {
+            return mac1; //retourne la première MAC si elle est plus petite
+        } else if (mac1.address[i] > mac2.address[i]) {
+            return mac2; //retourne la deuxième MAC si elle est plus grande
+        }
+    }
+    return mac1; //si elles sont égales, retourne la première MAC
+}

@@ -24,3 +24,5 @@ void print_mac(MAC mac);
 IP read_ip_from_str(const char* str);
 MAC read_mac_from_str(const char* str);
 
+MAC compare_mac(MAC mac1, MAC mac2);
+
