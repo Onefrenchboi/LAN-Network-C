@@ -112,7 +112,7 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
     if (port_dest != (uint8_t)-1) { //techniquement le cast en int va faire que -1 c'est 255 mais chuuuuut on a def le nb max de port a 16
         
         port* p = &e->ports[port_dest];
-        if (p->status=="B") {
+        if (p->status=='B') {
             return;
         }
 
@@ -243,7 +243,7 @@ bool send_BPDU(equipement* e) {
     printf(BOLDWHITE("  Bridge ID : "));
 
     bool bpdu_sent = false;
-    for (int i = 0; i < sw->base.nb_ports; i++) {
+    for (size_t i = 0; i < sw->base.nb_ports; i++) {
         port* p = &sw->base.ports[i];
         if (p->status == 'F'){
             trame_ethernet bpdu_trame = creer_trame_BPDU((equipement*)sw);

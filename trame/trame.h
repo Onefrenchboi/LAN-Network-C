@@ -34,10 +34,8 @@ typedef struct BPDU {
 
 
 void print_trame_ethernet(const trame_ethernet *trame);
-trame_ethernet read_trame_from_str(char* preambule, char* sfd, 
-                                    char* destination, char* source, 
-                                    char* type, char* data, 
-                                    char* bourrage, char* fcs);
+void print_trame_ethernet_brut(const trame_ethernet *trame);
+
 
 
 trame_ethernet creer_trame_vide(equipement* e, MAC target);

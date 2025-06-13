@@ -4,40 +4,18 @@
 void print_octets(const octet *tab, size_t taille) {
     printf(YELLOW("%02x"), tab[0]);
     for (size_t i = 1; i < taille; ++i) {
+        printf(YELLOW(":%02x"), tab[i]);
+    }
+}
+
+void print_octets_sans_double_points(const octet *tab, size_t taille) {
+    printf(YELLOW("%02x"), tab[0]);
+    for (size_t i = 1; i < taille; ++i) {
         printf(YELLOW("%02x"), tab[i]);
     }
-    printf("\n");
 }
 
 
-trame_ethernet read_trame_from_str(char* preambule, char* sfd, 
-                                    char* destination, char* source, 
-                                    char* type, char* data, 
-                                    char* bourrage, char* fcs) {
-    // trame_ethernet trame = {0};
-    // sscanf(preambule, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
-    //        &trame.preambule[0], &trame.preambule[1], &trame.preambule[2],
-    //        &trame.preambule[3], &trame.preambule[4], &trame.preambule[5],
-    //        &trame.preambule[6]);
-    // sscanf(sfd, "%02hhx", &trame.sfd);
-    // trame.destination = read_mac_from_str(destination);
-    // trame.destination = read_mac_from_str(source);
-    // sscanf(type, "%02hhx:%02hhx", &trame.type[0], &trame.type[1]);
-    // for (size_t i = 0; i < sizeof(trame.data); ++i) {
-    //     trame.data[i] = 0x00;
-    //     if (*(data + i * 3) == '\0') {
-    //         break;
-    //     }
-    //     else {
-    //         sscanf(data + i * 3, "%02hhx", &trame.data[i]);
-    //     }
-    // }
-    // for (size_t i = 0; i < sizeof(trame.bourrage); ++i) {
-    //     sscanf(bourrage + i * 3, "%02hhx", &trame.bourrage[i]);
-    // }
-    // sscanf(fcs, "%02hhx:%02hhx:%02hhx:%02hhx", &trame.fcs[0], &trame.fcs[1], &trame.fcs[2], &trame.fcs[3]);
-    // return trame;
-}
 
 
 
@@ -50,27 +28,38 @@ void print_trame_ethernet(const trame_ethernet *t) {
     printf(GREEN("Trame :\n"));
     printf(BOLDWHITE("Préambule : "));
     print_octets(t->preambule, sizeof(t->preambule));
-    printf(BOLDWHITE("SFD : "));
-    printf(YELLOW("%02x\n"), t->sfd);
-    printf(BOLDWHITE("Destination : "));
+    printf(BOLDWHITE("\nSFD : "));
+    printf(YELLOW("%02x"), t->sfd);
+    printf(BOLDWHITE("\nDestination : "));
     print_mac(t->destination);
-    printf(BOLDWHITE("Source : "));
+    printf(BOLDWHITE("\nSource : "));
     print_mac(t->source);
-    printf(BOLDWHITE("Type : "));
-    if (t->type == ETHERNET_T) {
-        printf(YELLOW("Ethernet\n"));
-    } else if (t->type == BDPU_T) {
-        printf(YELLOW("BPDU\n"));
-    } else {
-        printf(YELLOW("Type inconnu\n"));
-    }
-    printf(BOLDWHITE("Données : "));
+    printf(BOLDWHITE("\nType : "));
+    printf("%d",t->type);
+    printf(BOLDWHITE("\nDonnées : "));
     print_octets(t->data, sizeof(t->data));
-    printf(BOLDWHITE("Bourrage : "));
+    printf(BOLDWHITE("\nBourrage : "));
     print_octets(t->bourrage, sizeof(t->bourrage));
-    printf(BOLDWHITE("FCS : "));
+    printf(BOLDWHITE("\nFCS : "));
     print_octets(t->fcs, sizeof(t->fcs));
 }
+
+void print_trame_ethernet_brut(const trame_ethernet *t) {
+    if (t == NULL) {
+        printf("J'ai dit une trame pas un tram");
+        return;
+    }
+    printf(GREEN("Trame :\n"));
+    print_octets_sans_double_points(t->preambule, sizeof(t->preambule));
+    printf(YELLOW("%02x"), t->sfd);
+    print_mac_sans_double_points(t->destination);
+    print_mac_sans_double_points(t->source);
+    printf("%d",t->type);
+    print_octets_sans_double_points(t->data, sizeof(t->data));
+    print_octets_sans_double_points(t->bourrage, sizeof(t->bourrage));
+    print_octets_sans_double_points(t->fcs, sizeof(t->fcs));
+}
+
 
 trame_ethernet creer_trame_vide(equipement* e, MAC target) {
     trame_ethernet trame;

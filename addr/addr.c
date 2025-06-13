@@ -12,6 +12,11 @@ void print_mac(MAC mac) {
            mac.address[0], mac.address[1], mac.address[2],
            mac.address[3], mac.address[4], mac.address[5]);
 }
+void print_mac_sans_double_points(MAC mac) {
+    printf(YELLOW("%02x%02x%02x%02x%02x%02x"),
+           mac.address[0], mac.address[1], mac.address[2],
+           mac.address[3], mac.address[4], mac.address[5]);
+}
 
 
 
