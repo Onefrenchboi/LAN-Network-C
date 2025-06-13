@@ -23,6 +23,8 @@ int main() {
 
     STP(&r);
 
+    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+
     
     MAC targetpour7 = read_mac_from_str("54:d6:a6:82:c5:01");
     MAC targetpour14 = read_mac_from_str("54:d6:a6:82:c5:08");
@@ -42,7 +44,7 @@ int main() {
 
 
 
-    //afficher_reseau(&r);
+    afficher_reseau(&r);
     deinit_reseau(&r);
 
     return 0;

@@ -73,6 +73,7 @@ typedef struct station_t{
 //! functions ici tsais
 void print_equipement(equipement* e); //affiche les infos de l'équipement
 void print_commutation_table(table_commutation* table); //affihce la table de commutation passée en paramètre
+void print_ports(const equipement* e); //affiche les ports de l'équipement
 void init_switch(switch_t* sw, char* addr_MAC, uint8_t nb_ports, uint16_t priority); //init switch
 void init_station(station_t* sta, char* addr_MAC, char* addr_IP); //init station
 void init_commutation_table(table_commutation* table); //init table de commutation
@@ -82,4 +83,4 @@ void recevoir_trame(equipement* e, trame_ethernet* trame, uint8_t port_numero); 
 uint8_t existe_dans_commutation_table(table_commutation* table, MAC target); //check si la MAC target existe dans la table de commutation table, retourne le numéro du port si oui, -1 sinon
 void update_commutation_table(table_commutation* table, trame_ethernet* trame, uint8_t port_numero); //update la table de commu avec la trame 
 
-void send_BPDU(switch_t* sw);
+bool send_BPDU(equipement* sw);

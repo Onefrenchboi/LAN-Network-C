@@ -47,15 +47,17 @@ void init_commutation_table(table_commutation* table){
 
 
 
+
+
 //Envoi de trames
 void envoyer_broadcast(equipement* e, trame_ethernet* trame, uint8_t port_exclu) {
     for (uint8_t i = 0; i < e->nb_ports; ++i) {
+
         if (i == port_exclu) {
             continue;
         }
         port* p = &e->ports[i];
         if (p->status == 'B') {
-            printf(RED("\nLe port %d est bloqué, on ne peut pas envoyer la trame.\n"), p->numero);
             continue;
         }
         if (p->lien != NULL) {
@@ -111,7 +113,6 @@ void envoyer_trame(equipement* e, trame_ethernet* trame) {
         
         port* p = &e->ports[port_dest];
         if (p->status=="B") {
-            printf(RED("\nLe port %d est bloqué/pas branché, on ne peut pas envoyer la trame.\n"), p->numero);
             return;
         }
 
@@ -184,7 +185,7 @@ void recevoir_trame(equipement* e, trame_ethernet* trame, uint8_t port_numero){
     if (compare_BPDU(&b, s->bpdu)) { 
         printf(MAGENTA("Le BPDU reçu est meilleur que le BPDU actuel, on met à jour.\n"));
         s->bpdu->root = b.root;
-        s->bpdu->cost += b.cost;
+        s->bpdu->cost = b.cost + s->bpdu->cost;
 
 
         for (size_t i = 0; i < e->nb_ports; ++i) {
@@ -225,7 +226,13 @@ void recevoir_trame(equipement* e, trame_ethernet* trame, uint8_t port_numero){
 
 
 
-void send_BPDU(switch_t* sw) {
+
+bool send_BPDU(equipement* e) {
+    if (e->type != SWITCH) {
+        printf(RED("L'équipement n'est pas un switch, pas de BPDU envoyé.\n"));
+        return false;
+    }
+    switch_t* sw = (switch_t*)e;
 
     printf(MAGENTA("Envoi de BPDU par "));
     print_mac(sw->base.addr_MAC);
@@ -235,13 +242,16 @@ void send_BPDU(switch_t* sw) {
     printf(BOLDWHITE("\n  Cost : %d\n"), sw->bpdu->cost);
     printf(BOLDWHITE("  Bridge ID : "));
 
+    bool bpdu_sent = false;
     for (int i = 0; i < sw->base.nb_ports; i++) {
         port* p = &sw->base.ports[i];
         if (p->status == 'F'){
             trame_ethernet bpdu_trame = creer_trame_BPDU((equipement*)sw);
             envoyer_trame((equipement*)sw, &bpdu_trame);
+            bpdu_sent = true;
         }
     }
+    return bpdu_sent;
 }
 
 //return le num du port si la MAC existe dans la table de commutation, -1 sinon
@@ -303,7 +313,7 @@ void print_equipement(equipement* e) {
         print_commutation_table(&sw->commutation_table);
     } else {
         printf("t'as tt cassé\n");
-    }
+    } 
 }
 void print_commutation_table(table_commutation* table) {
     printf(BOLDWHITE("Table de commutation du switch :\n"));
@@ -320,20 +330,37 @@ void print_commutation_table(table_commutation* table) {
     printf("└─────────────────────────────┴────────┘\n");
 }
 
-void switch_print_ports(equipement* e){
-    printf("\n");
-    printf(BOLDWHITE("État des ports du switch :\n"));
-
-    switch_t* switch_ = (switch_t*)e;
-
-    printf("+-------+-------+-------+\n");
-    printf("| Port  | State | Role  |\n");
-    printf("+-------+-------+-------+\n");
-    for (int i = 0; i < switch_->base.nb_ports; i++)
-    {
-        printf("|   %d   |   ", i + 1);
-        printf("%c   |   %c ", switch_->base.ports[i].status, switch_->base.ports[i].role);
-        printf("  |\n");
+void print_ports(const equipement* e) {
+    if (e->type != SWITCH) {
+        printf("Pas un switch.\n");
+        return;
     }
-    printf("+-------+-------+-------+\n");
+    const switch_t* sw = (const switch_t*)e;
+    printf(BOLDWHITE("État des ports du switch :\n"));
+    printf("┌───────┬────────┬──────┐\n");
+    printf("│ Port  │ State  │ Role │\n");
+    printf("├───────┼────────┼──────┤\n");
+    for (size_t i = 0; i < sw->base.nb_ports; ++i) {
+        // Couleur pour l'état
+        char* state_color = "";
+        switch (sw->base.ports[i].status) {
+            case 'F': state_color = "\033[1;32m"; break; // Vert
+            case 'B': state_color = "\033[1;31m"; break; // Rouge
+            case 'L': state_color = "\033[1;33m"; break; // Jaune
+            default:  state_color = "\033[0m";    break; // Reset
+        }
+        // Couleur pour le rôle
+        char* role_color = "";
+        switch (sw->base.ports[i].role) {
+            case 'R': role_color = "\033[1;36m"; break; // Cyan
+            case 'D': role_color = "\033[1;34m"; break; // Bleu
+            case 'B': role_color = "\033[1;31m"; break; // Rouge
+            default:  role_color = "\033[0m";    break; // Reset
+        }
+        printf("│  %2zu   │   %s%c\033[0m    │  %s%c\033[0m   │\n",
+               i,
+               state_color, sw->base.ports[i].status,
+               role_color, sw->base.ports[i].role);
+    }
+    printf("└───────┴────────┴──────┘\n");
 }

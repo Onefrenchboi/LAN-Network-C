@@ -114,9 +114,8 @@ void afficher_reseau(reseau* reseau){
         printf(BOLDWHITE("%zu. "), i);
         print_equipement(e);
 
-        //!remove
         if (e->type == SWITCH) {
-            switch_print_ports(e);
+            print_ports(e);
         }
         printf("\n-------------------------\n");
     }
@@ -169,200 +168,113 @@ void deinit_reseau(reseau *reseau)
 }
 
 
-
-
 void STP(reseau* r) {
-    // TROUVER LE ROOT BRIDGE
-    find_root(r);
+    bool changed=true;
 
+    BPDU last_bpdu[r->nb_equipements]; 
 
-    printf(GREEN("Root found\n"));
-
-    // BLOQUER LES PORTS DES NON-ROOT BRIDGES
-    block_ports(r);
-
-
-    printf(GREEN("Ports blocked\n"));
-
-    //DÉSIGNER LES PORTS DESIGNÉS
-    set_designated_ports(r);
-
-
-    printf(GREEN("Ports designated\n")); 
-}
-
-
-void find_root(reseau *r)
-{
-    for (int i = 0; i < r->nb_equipements; i++)
-    {
-        if (r->equipements[i]->type != SWITCH){
-            continue; // On ne traite que les switches
+    while (changed) {
+        //on save els BPDU de tt le mone
+        for (size_t i = 0; i < r->nb_equipements; i++) {
+            if (r->equipements[i]->type != SWITCH) continue;
+            switch_t* sw = (switch_t*)r->equipements[i];
+            memcpy(&last_bpdu[i].root, &sw->bpdu->root, sizeof(MAC));
+            last_bpdu[i].cost = sw->bpdu->cost;
+            memcpy(&last_bpdu[i].bridge_id, &sw->bpdu->bridge_id, sizeof(MAC));
         }
-        trame_ethernet trame = creer_trame_BPDU(r->equipements[i]);
-        envoyer_trame(r->equipements[i], &trame);
-    }
 
-
-    for (int i = 0; i < r->nb_equipements; i++)
-    {
-        if (r->equipements[i]->type != SWITCH){
-            continue; // On ne traite que les switches
+        //tt le monde envoie son BPDU
+        for (size_t i = 0; i < r->nb_equipements; i++) {
+            if (r->equipements[i]->type != SWITCH) continue;
+            send_BPDU(r->equipements[i]);
         }
-        switch_t* sw = (switch_t *) r->equipements[i];
 
-        for (size_t p = 0; p < r->equipements[i]->nb_ports; p++) {
-            if (r->equipements[i]->ports[p].status == 'L') {
-                r->equipements[i]->ports[p].role = 'R';
-                r->equipements[i]->ports[p].status = 'F';
+        //tout le monde s'updaate
+        for (size_t i = 0; i < r->nb_equipements; i++) {
+            if (r->equipements[i]->type != SWITCH) continue;
+            switch_t* sw = (switch_t*)r->equipements[i];
+
+            //on trouve le root
+            int root_port = -1;
+            int best_cost = 9999999; //valeur arbitraire, c'est juste pour faire grand 
+            for (size_t p = 0; p < sw->base.nb_ports; p++) {
+                port* pt = &sw->base.ports[p];
+                if (pt->lien && pt->status != 'B' && pt->role != 'D') {
+                    if (sw->bpdu->cost < best_cost) {
+                        best_cost = sw->bpdu->cost;
+                        root_port = p;
+                    }
+                }
+            }
+            for (uint8_t p = 0; p < sw->base.nb_ports; p++) {
+                port* pt = &sw->base.ports[p];
+                if (p == root_port) {
+                    pt->role = 'R';
+                    pt->status = 'F';
+                } else if (pt->role != 'D') {
+                    pt->role = 'B';
+                    pt->status = 'B';
+                }
             }
         }
 
-    }
+        //pour chaque switch, on met à jour les ports désignés
+        for (size_t i = 0; i < r->nb_equipements; i++) {
+            if (r->equipements[i]->type != SWITCH){
+                continue;
+            } 
+            switch_t* sw = (switch_t*)r->equipements[i];
 
-}
-void block_ports(reseau *r)
-{
-    for (int i = 0; i < r->nb_equipements; i++)
-    {
-        if (r->equipements[i]->type != SWITCH){ //on traite pas les switch
-            continue;
-        }
-        switch_t* sw = (switch_t *) r->equipements[i];
-
-        if (memcmp(&sw->bpdu->bridge_id, &r->equipements[i]->addr_MAC, sizeof(MAC)) == 0){
-            continue;
-        }
-
-        for (int j = 0; j < r->equipements[i]->nb_ports; j++)
-        {
-            if (r->equipements[i]->ports[j].role != 'R' && r->equipements[i]->ports[j].role != 'D')
-            {
-                r->equipements[i]->ports[j].status = 'B';
-                r->equipements[i]->ports[j].role = 'B';
+            if (memcmp(&sw->bpdu->root, &sw->base.addr_MAC, sizeof(MAC)) == 0){
+                continue;
             }
-        }
-    }
-}
 
-void set_designated_ports(reseau *r)
-{
-    for (size_t i = 0; i < r->nb_equipements; i++) {
-        if (r->equipements[i]->type != SWITCH)
-            continue;
-        switch_t *sw = (switch_t *)r->equipements[i];
+            for (size_t j = 0; j < sw->base.nb_ports; j++) {
+                port *p = &sw->base.ports[j];
+                if (!p->lien){
+                    continue;
+                } 
 
-        // Si ce switch est le root, on saute
-        if (memcmp(&sw->bpdu->root, &sw->base.addr_MAC, sizeof(MAC)) == 0)
-            continue;
+                equipement *autre = (p->lien->portA->parent == sw->base.ports->parent) ? p->lien->portB->parent : p->lien->portA->parent; //mueheh ternaire
 
-        for (size_t j = 0; j < sw->base.nb_ports; j++) {
-            port *p = &sw->base.ports[j];
-            if (!p->lien) continue;
-
-            // Trouver l'équipement connecté à ce port
-            equipement *autre = (p->lien->portA->parent == (equipement*)sw) ? p->lien->portB->parent : p->lien->portA->parent;
-
-            if (autre->type == STATION) {
-                p->status = 'F';
-                p->role = 'D';
-            } else if (autre->type == SWITCH) {
-                switch_t *sw_autre = (switch_t *)autre;
-                // Trouver le port de l'autre switch qui pointe vers ce switch
-                for (size_t k = 0; k < sw_autre->base.nb_ports; k++) {
-                    port *p_autre = &sw_autre->base.ports[k];
-                    if (!p_autre->lien) continue;
-                    equipement *peer = (p_autre->lien->portA->parent == autre) ? p_autre->lien->portB->parent : p_autre->lien->portA->parent;
-                    if (peer == (equipement*)sw) {
-                        // Si ce port est root, alors l'autre côté devient désigné
-                        if (p->role == 'R') {
-                            p_autre->status = 'F';
-                            p_autre->role = 'D';
+                if (autre->type == STATION) {
+                    p->status = 'F';
+                    p->role = 'D';
+                } else if (autre->type == SWITCH) {
+                    switch_t *sw_autre = (switch_t *)autre;
+                    for (size_t k = 0; k < sw_autre->base.nb_ports; k++) {
+                        port *p_autre = &sw_autre->base.ports[k];
+                        if (!p_autre->lien) {
+                            continue;
+                        }
+                        equipement *peer = (p_autre->lien->portA->parent == autre) ? p_autre->lien->portB->parent : p_autre->lien->portA->parent;
+                        if (peer == (equipement*)sw) {
+                            if (p->role == 'R') {
+                                p_autre->status = 'F';
+                                p_autre->role = 'D';
+                            }
                         }
                     }
                 }
             }
         }
-    }
-}
 
-
-static switch_t* find_root_bridge(reseau* r) {
-    switch_t* root = NULL;
-    for (size_t i = 0; i < r->nb_equipements; i++) {
-        if (r->equipements[i]->type != SWITCH) continue;
-        switch_t* sw = (switch_t*)r->equipements[i];
-        if (!root || memcmp(&sw->base.addr_MAC, &root->base.addr_MAC, sizeof(MAC)) < 0) {
-            root = sw;
-        }
-    }
-    return root;
-}
-
-void STP_Triche(reseau* r) {
-    // 1. Élire le root bridge
-    switch_t* root = find_root_bridge(r);
-    if (!root) return;
-
-    // 2. Mettre à jour le champ bpdu de chaque switch
-    for (size_t i = 0; i < r->nb_equipements; i++) {
-        if (r->equipements[i]->type != SWITCH) continue;
-        switch_t* sw = (switch_t*)r->equipements[i];
-        sw->bpdu->root = root->base.addr_MAC;
-        sw->bpdu->cost = (memcmp(&sw->base.addr_MAC, &root->base.addr_MAC, sizeof(MAC)) == 0) ? 0 : 255;
-        sw->bpdu->bridge_id = sw->base.addr_MAC;
-    }
-
-    // 3. Attribuer le port root sur chaque switch (le port menant au root)
-    for (size_t i = 0; i < r->nb_equipements; i++) {
-        if (r->equipements[i]->type != SWITCH) continue;
-        switch_t* sw = (switch_t*)r->equipements[i];
-        if (memcmp(&sw->base.addr_MAC, &root->base.addr_MAC, sizeof(MAC)) == 0) {
-            // root bridge : tous les ports forwarding/designated
-            for (size_t p = 0; p < sw->base.nb_ports; p++) {
-                sw->base.ports[p].role = 'D';
-                sw->base.ports[p].status = 'F';
+        //on vérifie si les BPDU ont changé
+        changed = false;
+        for (size_t i = 0; i < r->nb_equipements; i++) {
+            if (r->equipements[i]->type != SWITCH) {
+                continue;
             }
-            continue;
-        }
-        // Pour les autres switches, trouver le port menant au root (plus petite MAC voisine)
-        int root_port = -1;
-        MAC best_mac = root->base.addr_MAC;
-        for (size_t p = 0; p < sw->base.nb_ports; p++) {
-            port* pt = &sw->base.ports[p];
-            if (!pt->lien) continue;
-            equipement* voisin = (pt->lien->portA->parent == (equipement*)sw) ? pt->lien->portB->parent : pt->lien->portA->parent;
-            if (voisin->type == SWITCH) {
-                if (memcmp(&((switch_t*)voisin)->base.addr_MAC, &best_mac, sizeof(MAC)) <= 0) {
-                    best_mac = ((switch_t*)voisin)->base.addr_MAC;
-                    root_port = p;
-                }
+            switch_t* sw = (switch_t*)r->equipements[i];
+            if (
+                memcmp(&last_bpdu[i].root, &sw->bpdu->root, sizeof(MAC)) != 0 ||
+                last_bpdu[i].cost != sw->bpdu->cost ||
+                memcmp(&last_bpdu[i].bridge_id, &sw->bpdu->bridge_id, sizeof(MAC)) != 0
+            ) {
+                changed = true;
+                break;
             }
         }
-        // Attribuer root port
-        for (size_t p = 0; p < sw->base.nb_ports; p++) {
-            if ((int)p == root_port) {
-                sw->base.ports[p].role = 'R';
-                sw->base.ports[p].status = 'F';
-            } else {
-                sw->base.ports[p].role = 'B';
-                sw->base.ports[p].status = 'B';
-            }
-        }
-    }
 
-    // 4. Marquer les ports désignés (vers les stations)
-    for (size_t i = 0; i < r->nb_equipements; i++) {
-        if (r->equipements[i]->type != SWITCH) continue;
-        switch_t* sw = (switch_t*)r->equipements[i];
-        for (size_t p = 0; p < sw->base.nb_ports; p++) {
-            port* pt = &sw->base.ports[p];
-            if (!pt->lien) continue;
-            equipement* voisin = (pt->lien->portA->parent == (equipement*)sw) ? pt->lien->portB->parent : pt->lien->portA->parent;
-            if (voisin->type == STATION) {
-                pt->role = 'D';
-                pt->status = 'F';
-            }
-        }
     }
 }
