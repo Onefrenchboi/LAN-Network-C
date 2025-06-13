@@ -9,7 +9,7 @@
 
 int main() {
     reseau r;
-    read_conf("confCycle", &r);
+    read_conf("mylancycle.lan", &r);
 
 
     
