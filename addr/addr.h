@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 typedef uint8_t octet;
-typedef uint8_t nb_ports;
 
 
 typedef struct {
@@ -17,11 +16,13 @@ typedef struct {
 } MAC;
 
 
-//?Fonctions
 
 void print_ip(IP ip);
 void print_mac(MAC mac);
+void print_mac_sans_double_points(MAC mac);
 
 IP read_ip_from_str(const char* str);
 MAC read_mac_from_str(const char* str);
+
+MAC compare_mac(MAC mac1, MAC mac2);
 

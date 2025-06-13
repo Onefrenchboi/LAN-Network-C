@@ -1,5 +1,5 @@
 #include "algos.h"
-#include "utils.h"
+#include "utilsGraphe.h"
 
 #include <stdio.h>
 #include <stdlib.h>

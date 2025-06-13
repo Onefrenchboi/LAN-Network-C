@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "utilsGraphe.h"
 
 void generer_permutation(size_t *permutation, size_t n)
 {
