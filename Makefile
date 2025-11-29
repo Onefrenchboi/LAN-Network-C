@@ -1,4 +1,4 @@
-TARGET_EXEC ?= La_Barbe_De_Z
+TARGET_EXEC ?= network
 
 BUILD_DIR ?= ./build
 TARGET_DIR ?= ./bin

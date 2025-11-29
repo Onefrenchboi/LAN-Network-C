@@ -1,27 +1,56 @@
-# SAE 2.3 - Simulation d'un réseau LAN en C
+# Simulation of a LAN network in C
 
-## Membres
-* **FAUCON Mathéo** - Chef du projet, s'est cassé la tête sur l'échange de trames et le STP, celui qui écrit ce ""RAPPORT"", celui qui aime foutre des couleurs partout
-* **DE AZEVEDO Mathis** - Le mec qui fait l'affichage des trames
-* **WAHL Matéo** - Support émotionnel
 
-## But
-Simuler un réseau en C <small>(nan vraiment ?)</small>, avec des machines et switch, un STP, échange de trames, lecture depuis un fichier configuration.
 
-### Ce qui a été fait : 
-* Les structures <small>(si si je vous le jure)</small>
-* Affichage du réseau
-* Affichage des trames <small>(demandez a Mathis c'était son job)</small>
-* Echange de trame <small>(et qui fonctionne ET est beau à l'affichage en plus)</small>
-* STP <small>(svp regardez pas de trop près jsuis pas sûr il est 100% fiable)</small>
+[![fr](https://img.shields.io/badge/lang-fr-blue.svg)](./README.fr.md)
 
-## Conclusion
 
-De toute façon les chances que vous lisiez ca sont ASTRONOMIQUEMENT minimes donc euh ouais conclusion et tout toi-même tu sais oéoéoé le C c'est banger la saé est trop bien 
-<small>(Si jamais vous lisez vraiment ça, chapeau je m'y attendais pas, ça va vous sinon?)</small>
+## About the project
 
-<p align="center">
-  <img src="./img/plink.gif" alt="Plink"/>
-</p>
+**This project was conducted during my first year of Computer Science at IUT Robert Schuman, under teacher supervision and in an academic context.**
 
-<small>Author : Mathéo F.</small>
+
+We want to develop a simulation of **a LAN network**, in C. The main goal is to be able to create *computers* and *switches*, with their own addresses, and have them send messages to eachother.
+
+## Organization
+
+- **Group work** with [Matéo W.](https://github.com/Zeyn-n) and [Mathis D.]()
+
+### Technologies Used
+
+* **C**: Main programming language
+* **Generic pointers**: Use of casting to create a flexible and modular network simulation
+* **Makefile**: Compilation via enriched [Makefile](./Makefile)
+
+## How to Run the Project
+
+
+### Prerequisites
+
+- **GCC** installed on your machine
+
+### Installation
+
+1. Clone the repository to your local machine:
+    ```bash
+    git clone https://github.com/Onefrenchboi/LAN-Network-C.git
+    ```
+
+### Manual Compilation and Execution
+
+```bash
+# Compile the project
+make
+
+# Run the network
+./bin/network
+```
+
+## Main Features
+
+* **Structures**: Special structures to represent the different parts of a network
+  * **Switches and Machines**: Create and manage network devices with unique addresses
+* **Sending**: Send "pings" to other machines in the network
+* **Display**: Visualize network frames as they are exchanged
+* **Spanning Tree Protocol (STP)**: Simulate STP to prevent network loops
+* **Configuration File Support**: Load network from a configuration file
